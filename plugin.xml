@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- The id must be unambiguous, reverse-domain format is used -->
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
+        id="cordova-plugin-visionkit" version="1.0.0">
+
+    <!-- Name, description and other stuff-->
+    <name>VisionKit</name>
+    <description>Cordova wrapper around iOS VisionKit</description>
+    <license>MIT</license>
+    <keywords>scan,document</keywords>
+
+    <!-- Define the path to the common JavaScript interface -->
+    <js-module src="www/visionkit.js" name="visionkit">
+        <clobbers target="VisionKit" />
+    </js-module>
+
+    <!-- The platform tag specifies a corresponding set of
+    native code for the platform specifyed by the attribute name-->
+
+    <!-- ios -->
+    <platform name="ios">
+        <!-- The config-file tag encapsulates a feature tag that
+         is injected into the platform-specific config.xml -->
+         <config-file target="config.xml" parent="/*">
+            <feature name="VisionKit">
+                <param name="ios-package" value="VisionKit" />
+                <param name="onload" value="true" />
+            </feature>
+         </config-file>
+         <!-- path in wich native interface files will be installed -->
+         <header-file src="src/ios/VisionKit.h" />
+         <source-file src="src/ios/VisionKit.m" />
+     </platform>
+
+</plugin>

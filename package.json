@@ -1,0 +1,31 @@
+{
+  "name": "cordova-plugin-visionkit",
+  "version": "1.0.0",
+  "description": "Cordova wrapper around iOS VisionKit.",
+  "cordova": {
+    "id": "cordova-plugin-visionkit",
+    "platforms": [
+      "ios"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rareloop/cordova-plugin-visionkit"
+  },
+  "keywords": [
+    "ecosystem:cordova",
+    "cordova-ios"
+  ],
+  "engines": [
+    {
+      "name": "cordova",
+      "version": ">=3.5.0"
+    }
+  ],
+  "author": "Rareloop",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/rareloop/cordova-plugin-visionkit/issues"
+  },
+  "homepage": "https://github.com/rareloop/cordova-plugin-visionkit#readme"
+}
