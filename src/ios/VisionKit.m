@@ -4,15 +4,17 @@
 
 @implementation VisionKit
 
+@synthesize documentCameraViewController;
+
 - (void)scan:(CDVInvokedUrlCommand*)command {
     // NSString* myarg = [[command arguments] objectAtIndex:0];//Example of argument
 
     callbackId = command.callbackId;
 
     @try {
-        VNDocumentCameraViewController* documentCameraViewController = [[VNDocumentCameraViewController alloc] init];
-        documentCameraViewController.delegate = self;
-        [self.viewController presentViewController:documentCameraViewController animated:YES completion:nil];
+        self.documentCameraViewController = [VNDocumentCameraViewController new];
+        self.documentCameraViewController.delegate = self;
+        [self.viewController presentViewController:self.documentCameraViewController animated:YES completion:nil];
     } @catch ( NSException *e ) {
         CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:e.reason];
         [self.commandDelegate sendPluginResult:pluginResult callbackId:callbackId];
@@ -24,11 +26,14 @@
                    didFinishWithScan:(VNDocumentCameraScan *)scan;
 {
     [controller dismissViewControllerAnimated:YES completion:nil];
-
+    NSLog(@"Dismiss scanner");
+    
     NSMutableArray* images = [@[] mutableCopy];
     CDVPluginResult* pluginResult = nil;
 
     for (int i = 0; i < [scan pageCount]; i++) {
+        NSLog(@"Processing scanned image %d", i);
+        
         UIImage* image = [scan imageOfPageAtIndex: (NSUInteger)i];
         NSString* filePath = [self tempFilePath:@"jpg"];
         NSData* imageData = UIImageJPEGRepresentation(image, 0.7);
@@ -40,9 +45,13 @@
             [self.commandDelegate sendPluginResult:pluginResult callbackId:callbackId];
             return;
         }
+        
+        NSLog(@"Adding file to `images` array: %@", filePath);
 
         [images addObject:filePath];
     }
+    
+    NSLog(@"%@", images);
 
     pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray: images];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:callbackId];
@@ -50,7 +59,7 @@
 
 - (void)documentCameraViewControllerDidCancel:(VNDocumentCameraViewController *)controller {
     [controller dismissViewControllerAnimated:YES completion:nil];
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary: @[]];
+    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray: @[]];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:callbackId];
 }
 

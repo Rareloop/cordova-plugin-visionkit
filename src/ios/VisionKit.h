@@ -5,6 +5,8 @@
     NSString* callbackId;
 }
 
+@property (strong) VNDocumentCameraViewController* documentCameraViewController;
+
 - (void) scan:(CDVInvokedUrlCommand*)command;
 
 @end
