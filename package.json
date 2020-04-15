@@ -1,6 +1,6 @@
 {
   "name": "cordova-plugin-visionkit",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Cordova wrapper around iOS VisionKit.",
   "cordova": {
     "id": "cordova-plugin-visionkit",
