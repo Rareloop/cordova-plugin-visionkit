@@ -10,23 +10,50 @@
     // NSString* myarg = [[command arguments] objectAtIndex:0];//Example of argument
 
     callbackId = command.callbackId;
+    
+    __weak VisionKit* weakSelf = self;
 
-    @try {
+    [self.commandDelegate runInBackground:^{
+        @try {
+            [weakSelf showScanUI];
+        } @catch ( NSException *e ) {
+            CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:e.reason];
+            [self.commandDelegate sendPluginResult:pluginResult callbackId:self->callbackId];
+        }
+    }];
+}
+
+- (void)showScanUI
+{
+    // Perform UI operations on the main thread
+    dispatch_async(dispatch_get_main_queue(), ^{
         self.documentCameraViewController = [VNDocumentCameraViewController new];
         self.documentCameraViewController.delegate = self;
+        
         [self.viewController presentViewController:self.documentCameraViewController animated:YES completion:nil];
-    } @catch ( NSException *e ) {
-        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:e.reason];
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:callbackId];
-    }
-
+    });
 }
 
 - (void)documentCameraViewController:(VNDocumentCameraViewController *)controller
                    didFinishWithScan:(VNDocumentCameraScan *)scan;
 {
-    [controller dismissViewControllerAnimated:YES completion:nil];
-    NSLog(@"Dismiss scanner");
+    // Present a loading spinner
+    UIView* loadingView = [[UIView alloc] init];
+    loadingView.frame = CGRectMake(0, 0, 80, 80);
+    loadingView.center = self.documentCameraViewController.view.center;
+    loadingView.backgroundColor = [UIColor whiteColor];
+    loadingView.clipsToBounds = true;
+    loadingView.layer.cornerRadius = 10;
+    
+    UIActivityIndicatorView* spinner = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleLarge];
+    
+    spinner.center = CGPointMake(loadingView.frame.size.width / 2,
+    loadingView.frame.size.height / 2);
+    [spinner startAnimating];
+    
+    // Add the views to the UI
+    [loadingView addSubview:spinner];
+    [[self.documentCameraViewController view] addSubview:loadingView];
     
     NSMutableArray* images = [@[] mutableCopy];
     CDVPluginResult* pluginResult = nil;
@@ -34,9 +61,13 @@
     for (int i = 0; i < [scan pageCount]; i++) {
         NSLog(@"Processing scanned image %d", i);
         
-        UIImage* image = [scan imageOfPageAtIndex: (NSUInteger)i];
         NSString* filePath = [self tempFilePath:@"jpg"];
+        NSLog(@"Got image file path image %d, %@", i, filePath);
+        
+        UIImage* image = [scan imageOfPageAtIndex: i];
         NSData* imageData = UIImageJPEGRepresentation(image, 0.7);
+        
+        NSLog(@"Got image data image %d", i);
 
         NSError* err = nil;
 
@@ -55,6 +86,9 @@
 
     pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray: images];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:callbackId];
+    
+    [controller dismissViewControllerAnimated:YES completion:nil];
+    NSLog(@"Dismiss scanner");
 }
 
 - (void)documentCameraViewControllerDidCancel:(VNDocumentCameraViewController *)controller {
@@ -78,9 +112,12 @@
     NSString* filePath;
 
     // unique file name
-    NSTimeInterval timeStamp = [[NSDate date] timeIntervalSince1970];
-    NSNumber *timeStampObj = [NSNumber numberWithDouble: timeStamp];
+    NSTimeInterval timeStamp;
+    NSNumber *timeStampObj;
+    
     do {
+        timeStamp = [[NSDate date] timeIntervalSince1970];
+        timeStampObj = [NSNumber numberWithDouble: timeStamp];
         filePath = [NSString stringWithFormat:@"%@/%@%ld.%@", docsPath, RL_SCAN_PREFIX, [timeStampObj longValue], extension];
     } while ([fileMgr fileExistsAtPath:filePath]);
 
