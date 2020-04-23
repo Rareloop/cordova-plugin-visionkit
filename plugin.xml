@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- The id must be unambiguous, reverse-domain format is used -->
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
-        id="cordova-plugin-visionkit" version="1.0.2">
+        id="cordova-plugin-visionkit" version="1.0.3">
 
     <!-- Name, description and other stuff-->
     <name>VisionKit</name>
