@@ -55,40 +55,49 @@
     [loadingView addSubview:spinner];
     [[self.documentCameraViewController view] addSubview:loadingView];
     
-    NSMutableArray* images = [@[] mutableCopy];
-    CDVPluginResult* pluginResult = nil;
+    [[self.documentCameraViewController view] setNeedsDisplay];
+    
+    __weak VisionKit* weakSelf = self;
+    
+    dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 0.5);
+    dispatch_after(delay, dispatch_get_main_queue(), ^(void){
+        NSMutableArray* images = [@[] mutableCopy];
+        CDVPluginResult* pluginResult = nil;
 
-    for (int i = 0; i < [scan pageCount]; i++) {
-        NSLog(@"Processing scanned image %d", i);
-        
-        NSString* filePath = [self tempFilePath:@"jpg"];
-        NSLog(@"Got image file path image %d, %@", i, filePath);
-        
-        UIImage* image = [scan imageOfPageAtIndex: i];
-        NSData* imageData = UIImageJPEGRepresentation(image, 0.7);
-        
-        NSLog(@"Got image data image %d", i);
+        for (int i = 0; i < [scan pageCount]; i++) {
+            NSLog(@"Processing scanned image %d", i);
+            
+            NSString* filePath = [self tempFilePath:@"jpg"];
+            NSLog(@"Got image file path image %d, %@", i, filePath);
+            
+            UIImage* image = [scan imageOfPageAtIndex: i];
+            NSData* imageData = UIImageJPEGRepresentation(image, 0.7);
+            
+            NSLog(@"Got image data image %d", i);
 
-        NSError* err = nil;
+            NSError* err = nil;
 
-        if (![imageData writeToFile:filePath options:NSAtomicWrite error:&err]) {
-            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION messageAsString:[err localizedDescription]];
-            [self.commandDelegate sendPluginResult:pluginResult callbackId:callbackId];
-            return;
+            if (![imageData writeToFile:filePath options:NSAtomicWrite error:&err]) {
+                pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION messageAsString:[err localizedDescription]];
+                [weakSelf.commandDelegate sendPluginResult:pluginResult callbackId: self->callbackId];
+                return;
+            }
+            
+            NSLog(@"Adding file to `images` array: %@", filePath);
+
+            [images addObject:filePath];
         }
         
-        NSLog(@"Adding file to `images` array: %@", filePath);
+        NSLog(@"%@", images);
 
-        [images addObject:filePath];
-    }
+        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray: images];
+        [weakSelf.commandDelegate sendPluginResult:pluginResult callbackId:self->callbackId];
+        
+        [controller dismissViewControllerAnimated:YES completion:nil];
+        NSLog(@"Dismiss scanner");
+    });
     
-    NSLog(@"%@", images);
-
-    pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray: images];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:callbackId];
     
-    [controller dismissViewControllerAnimated:YES completion:nil];
-    NSLog(@"Dismiss scanner");
 }
 
 - (void)documentCameraViewControllerDidCancel:(VNDocumentCameraViewController *)controller {
